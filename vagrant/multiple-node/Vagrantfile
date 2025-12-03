@@ -1,0 +1,63 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Common settings for all VMs
+  config.vm.box = "koalephant/debian12"  # for Apple Silicon
+  # config.vm.box = "debian/bookworm64"  # for Intel/Windows/Linux
+  
+  # ==========================================
+  # Web Server (public + private access)
+  # ==========================================
+  config.vm.define "web" do |web|
+    web.vm.hostname = "web-server"
+    
+    # Private network (Host-Only)
+    web.vm.network "private_network", ip: "192.168.56.10"
+    
+    # Port forwarding for host access
+    web.vm.network "forwarded_port", guest: 80, host: 8080
+    web.vm.network "forwarded_port", guest: 443, host: 8443
+    
+    # Public network (Bridged) - optional
+    # web.vm.network "public_network"
+    
+    web.vm.provider "virtualbox" do |vb|
+      vb.name = "web-server"
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+  end
+  
+  # ==========================================
+  # Application Server (private network)
+  # ==========================================
+  config.vm.define "app" do |app|
+    app.vm.hostname = "app-server"
+    
+    # Private network - access only from other VMs and host
+    app.vm.network "private_network", ip: "192.168.56.11"
+    
+    app.vm.provider "virtualbox" do |vb|
+      vb.name = "app-server"
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+  end
+  
+  # ==========================================
+  # Database Server (most secure)
+  # ==========================================
+  config.vm.define "db" do |db|
+    db.vm.hostname = "db-server"
+    
+    # Private network - no external access
+    db.vm.network "private_network", ip: "192.168.56.12"
+    
+    db.vm.provider "virtualbox" do |vb|
+      vb.name = "db-server"
+      vb.memory = "2048"
+      vb.cpus = 2
+    end
+  end
+end
